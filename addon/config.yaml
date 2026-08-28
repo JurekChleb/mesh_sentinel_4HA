@@ -1,0 +1,54 @@
+name: Mesh Sentinel
+version: "0.1.0"
+slug: mesh_sentinel
+description: >-
+  Local flight recorder and diagnostician for your Zigbee network. Records device
+  health, correlates failures into a single readable incident, and tells you what
+  to check - without ever touching your network.
+url: https://github.com/JurekChleb/mesh_sentinel_4HA
+image: null
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:lan-check
+panel_title: Mesh Sentinel
+panel_admin: true
+hassio_api: true
+homeassistant_api: true
+services:
+  - mqtt:need
+options:
+  log_level: info
+  mqtt_host: ""
+  mqtt_port: 1883
+  mqtt_username: ""
+  mqtt_password: ""
+  mqtt_tls: false
+  z2m_base_topic: zigbee2mqtt
+  offline_grace_seconds: 180
+  mains_stale_minutes: 90
+  battery_stale_hours: 24
+  topology_snapshot_interval_minutes: 15
+  topology_active_scan: false
+  coordinator_check_interval_minutes: 5
+  retention_days: 7
+schema:
+  log_level: list(trace|debug|info|warning|error)
+  mqtt_host: str?
+  mqtt_port: port
+  mqtt_username: str?
+  mqtt_password: password?
+  mqtt_tls: bool
+  z2m_base_topic: str
+  offline_grace_seconds: int(30,3600)
+  mains_stale_minutes: int(5,1440)
+  battery_stale_hours: int(1,168)
+  topology_snapshot_interval_minutes: int(5,720)
+  topology_active_scan: bool
+  coordinator_check_interval_minutes: int(1,1440)
+  retention_days: int(1,90)

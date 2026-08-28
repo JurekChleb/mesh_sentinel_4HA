@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mesh-sentinel"
+version = "0.1.0"
+description = "Local flight recorder and diagnostician for Home Assistant device networks"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.34",
+    "aiomqtt>=2.3",
+    "websockets>=13.1",
+]
+
+[project.scripts]
+mesh-sentinel = "mesh_sentinel.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["mesh_sentinel*"]
+
+[tool.pytest.ini_options]
+testpaths = ["../../tests"]
+asyncio_mode = "auto"
+filterwarnings = ["error::DeprecationWarning:mesh_sentinel.*"]

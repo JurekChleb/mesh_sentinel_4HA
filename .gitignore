@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.db
+*.db-wal
+*.db-shm
+
+# Node
+node_modules/
+addon/frontend/dist/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
