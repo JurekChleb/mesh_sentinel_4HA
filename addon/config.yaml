@@ -6,7 +6,6 @@ description: >-
   health, correlates failures into a single readable incident, and tells you what
   to check - without ever touching your network.
 url: https://github.com/JurekChleb/mesh_sentinel_4HA
-image: null
 arch:
   - amd64
   - aarch64
