@@ -33,6 +33,6 @@ COPY --from=frontend /build/dist /app/frontend
 COPY run.sh /run.sh
 RUN chmod a+x /run.sh
 
-LABEL io.hass.type="addon" io.hass.version="0.1.0"
+LABEL io.hass.type="addon" io.hass.version="0.1.1"
 
 CMD ["/run.sh"]

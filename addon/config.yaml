@@ -1,5 +1,5 @@
 name: Mesh Sentinel
-version: "0.1.0"
+version: "0.1.1"
 slug: mesh_sentinel
 description: >-
   Local flight recorder and diagnostician for your Zigbee network. Records device

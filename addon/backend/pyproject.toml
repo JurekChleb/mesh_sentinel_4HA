@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mesh-sentinel"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local flight recorder and diagnostician for Home Assistant device networks"
 requires-python = ">=3.11"
 dependencies = [
