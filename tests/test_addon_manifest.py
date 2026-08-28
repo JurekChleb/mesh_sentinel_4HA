@@ -142,3 +142,95 @@ def test_the_app_directory_is_where_the_supervisor_looks():
     assert CONFIG.is_file()
     assert (CONFIG.parent / "Dockerfile").is_file()
     assert (CONFIG.parent / "run.sh").is_file()
+
+
+# --- Dockerfile ---------------------------------------------------------------
+# The Supervisor builds with addon/ as the Docker context and reports every
+# failure as "an unknown error occurred while trying to build the image", so a
+# broken path here costs a round trip through a real Home Assistant install.
+
+DOCKERFILE = ROOT / "addon" / "Dockerfile"
+
+
+@pytest.fixture(scope="module")
+def dockerfile_lines() -> list[str]:
+    return [
+        line.strip()
+        for line in DOCKERFILE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+
+
+def test_build_from_is_declared_before_the_first_from(dockerfile_lines: list[str]):
+    """Docker only expands an ARG inside FROM if it is declared outside every stage.
+
+    Declared after the first FROM it belongs to that stage, ${BUILD_FROM} comes
+    out empty and the build dies before the first instruction runs. Every
+    official Home Assistant app puts it on line 1, multi-stage ones included.
+    """
+
+    first_from = next(
+        (i for i, line in enumerate(dockerfile_lines) if line.upper().startswith("FROM ")),
+        None,
+    )
+    assert first_from is not None, "the Dockerfile has no FROM"
+    arg_indexes = [
+        i for i, line in enumerate(dockerfile_lines) if line.upper().startswith("ARG BUILD_FROM")
+    ]
+    assert arg_indexes, "BUILD_FROM must be declared; the Supervisor passes it per architecture"
+    assert min(arg_indexes) < first_from, (
+        "ARG BUILD_FROM must come before the first FROM, otherwise it is scoped "
+        "to that stage and ${BUILD_FROM} resolves to an empty image name"
+    )
+
+
+def test_copy_sources_exist_in_the_build_context(dockerfile_lines: list[str]):
+    """The context is addon/ itself, so 'COPY addon/run.sh' cannot resolve."""
+
+    context = ROOT / "addon"
+    missing: list[str] = []
+    for line in dockerfile_lines:
+        if not line.upper().startswith("COPY "):
+            continue
+        parts = line.split()[1:]
+        if any(part.startswith("--from=") for part in parts):
+            continue  # comes from an earlier stage, not from disk
+        sources = [p for p in parts[:-1] if not p.startswith("--")]
+        for source in sources:
+            if not (context / source).exists():
+                missing.append(source)
+    assert not missing, (
+        f"COPY sources missing from the addon/ build context: {missing}. "
+        "Paths are relative to addon/, so they never start with 'addon/'."
+    )
+
+
+def test_the_container_has_an_entrypoint(dockerfile_lines: list[str]):
+    assert any(line.upper().startswith("CMD ") for line in dockerfile_lines)
+
+
+def test_run_script_is_executable_and_uses_bashio():
+    run_sh = ROOT / "addon" / "run.sh"
+    assert run_sh.read_text(encoding="utf-8").startswith("#!/usr/bin/with-contenv bashio")
+    import subprocess
+
+    mode = subprocess.run(
+        ["git", "ls-files", "-s", "addon/run.sh"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert mode and mode[0] == "100755", (
+        "run.sh must be committed executable; the Dockerfile chmods it too, but a "
+        "non-executable file in git is a trap for anyone building by hand"
+    )
+
+
+def test_base_images_are_pinned_per_architecture(config: dict):
+    build = yaml.safe_load((ROOT / "addon" / "build.yaml").read_text(encoding="utf-8"))
+    declared = set(config["arch"])
+    provided = set(build.get("build_from", {}))
+    assert declared == provided, (
+        f"config.yaml declares {declared} but build.yaml provides base images for {provided}"
+    )
