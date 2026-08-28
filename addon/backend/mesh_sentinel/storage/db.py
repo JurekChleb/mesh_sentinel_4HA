@@ -13,7 +13,7 @@ from pathlib import Path
 
 _LOGGER = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS incidents (
     resolved_at        REAL,
     cause_device_id    TEXT,
     network_id         TEXT,
-    unknowns_json      TEXT NOT NULL DEFAULT '[]'
+    unknowns_json      TEXT NOT NULL DEFAULT '[]',
+    superseded_by      INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status, started_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_incidents_open_key
@@ -174,6 +175,8 @@ class Database:
                     f"Database schema v{current} is newer than this build "
                     f"(v{SCHEMA_VERSION}); downgrade is not supported."
                 )
+            if 0 < current < 2:
+                self._add_column("incidents", "superseded_by", "INTEGER")
             if current != SCHEMA_VERSION:
                 self._conn.execute(
                     "INSERT INTO meta(key, value) VALUES('schema_version', ?) "
@@ -182,6 +185,14 @@ class Database:
                 )
                 _LOGGER.info("Database schema at v%s", SCHEMA_VERSION)
             self._conn.commit()
+
+    def _add_column(self, table: str, column: str, definition: str) -> None:
+        existing = {
+            row["name"] for row in self._conn.execute(f"PRAGMA table_info({table})").fetchall()
+        }
+        if column not in existing:
+            self._conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+            _LOGGER.info("Migrated %s: added column %s", table, column)
 
     def close(self) -> None:
         with self._lock:

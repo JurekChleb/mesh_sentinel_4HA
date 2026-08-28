@@ -59,6 +59,7 @@ export interface Incident {
   started_at: number
   updated_at: number
   resolved_at: number | null
+  superseded_by: number | null
   cause_device_id: string | null
   cause_device_name: string | null
   network_id: string | null

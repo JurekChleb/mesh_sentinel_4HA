@@ -81,6 +81,7 @@ def incident_json(
         "started_at": incident.started_at,
         "updated_at": incident.updated_at,
         "resolved_at": incident.resolved_at,
+        "superseded_by": incident.superseded_by,
         "cause_device_id": incident.cause_device_id,
         "cause_device_name": names.get(incident.cause_device_id or ""),
         "network_id": incident.network_id,

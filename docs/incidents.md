@@ -40,6 +40,34 @@ later one. That is what turns one root cause into one incident instead of five:
 6. rule_device_degraded still reachable, but getting worse
 ```
 
+## Superseding: detection is staggered
+
+Devices are not confirmed offline at the same instant. A router is usually past
+its grace window a minute or two before the devices behind it are, so a
+`device_offline` incident for the router legitimately opens *first* — and then
+the router failure becomes visible.
+
+Leaving both open would mean one root cause producing several incidents, which is
+the exact failure this layer exists to prevent. So when a better explanation
+covers all of a weaker incident's devices, the weaker one is closed with
+`superseded_by` pointing at the new incident and an evidence line naming it. The
+UI shows it as *Superseded by #N* rather than *Resolved*, because nothing
+actually got better.
+
+Ranking, best explanation first:
+
+```
+0  data_source_unavailable / coordinator_unavailable / bridge_unavailable
+1  service_restart
+2  router_failure
+3  mass_outage
+4  device_offline
+5  device_degraded
+```
+
+A device that drops entirely supersedes its own `device_degraded` incident for
+the same reason.
+
 ## What every hypothesis must carry
 
 A rule that cannot state its unknowns is not ready to ship. Each incident stores:

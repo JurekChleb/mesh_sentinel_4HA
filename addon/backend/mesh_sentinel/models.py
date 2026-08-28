@@ -142,5 +142,6 @@ class Incident:
     resolved_at: float | None = None
     cause_device_id: str | None = None
     network_id: str | None = None
+    superseded_by: int | None = None
     unknowns: list[str] = field(default_factory=list)
     affected_device_ids: list[str] = field(default_factory=list)

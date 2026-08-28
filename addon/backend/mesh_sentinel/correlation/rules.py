@@ -452,6 +452,14 @@ def rule_single_device(ctx: EvaluationContext, remaining: set[str]) -> list[Hypo
             action = f"Check power at {_name(device)}, then power-cycle it."
 
         severity = "critical" if device.is_critical else "warning"
+        healthy_ratio = ctx.healthy_ratio()
+        mesh_note = (
+            f"{round(healthy_ratio * 100)}% of devices are still reachable, so this is "
+            "local to the device"
+            if healthy_ratio >= 0.8
+            else f"only {round(healthy_ratio * 100)}% of devices are reachable, so a shared "
+            "cause may still emerge"
+        )
         hypotheses.append(
             Hypothesis(
                 kind="device_offline",
@@ -469,14 +477,7 @@ def rule_single_device(ctx: EvaluationContext, remaining: set[str]) -> list[Hypo
                         description=f"{_name(device)} became unavailable",
                         device_id=device_id,
                     ),
-                    EvidenceItem(
-                        ts=ctx.now,
-                        kind="mesh_healthy",
-                        description=(
-                            f"{round(ctx.healthy_ratio() * 100)}% of devices are still "
-                            "reachable, so this is local to the device"
-                        ),
-                    ),
+                    EvidenceItem(ts=ctx.now, kind="mesh_state", description=mesh_note),
                 ],
                 unknowns=[
                     "Whether the device is out of battery, out of range, or has lost its pairing.",
@@ -554,6 +555,24 @@ def rule_device_degraded(ctx: EvaluationContext, remaining: set[str]) -> list[Hy
     return hypotheses
 
 
+# How good an explanation each kind is. Devices are detected as offline over
+# seconds or minutes, so a router failure often becomes visible only after a
+# single-device incident has already opened for the router itself. A lower rank
+# supersedes a higher one covering the same devices - otherwise one root cause
+# still ends up as several incidents, which is the thing this layer exists to
+# prevent.
+RULE_RANK: dict[str, int] = {
+    "data_source_unavailable": 0,
+    "coordinator_unavailable": 0,
+    "bridge_unavailable": 0,
+    "service_restart": 1,
+    "router_failure": 2,
+    "mass_outage": 3,
+    "device_offline": 4,
+    "device_degraded": 5,
+}
+
+
 # Order matters: the first rule that claims a device owns it.
 ALL_RULES: list[Rule] = [
     rule_data_source,
@@ -595,6 +614,7 @@ def build_bridge_state(events: list[Event], now: float) -> BridgeState:
 
 __all__ = [
     "ALL_RULES",
+    "RULE_RANK",
     "BridgeState",
     "EvaluationContext",
     "build_bridge_state",

@@ -41,8 +41,12 @@ export function IncidentDetailView({ incidentId, onBack, onOpenDevice }: Props) 
       <div className="panel">
         <div className="toolbar" style={{ marginBottom: 10 }}>
           <Pill tone={incident.severity}>{SEVERITY_LABEL[incident.severity] ?? incident.severity}</Pill>
-          <Pill tone={incident.status === 'open' ? 'warning' : 'healthy'}>
-            {incident.status === 'open' ? 'Active' : 'Resolved'}
+          <Pill tone={incident.status === 'open' ? 'warning' : incident.superseded_by ? 'unknown' : 'healthy'}>
+            {incident.status === 'open'
+              ? 'Active'
+              : incident.superseded_by
+                ? `Superseded by #${incident.superseded_by}`
+                : 'Resolved'}
           </Pill>
           <span className="muted small">
             Started {formatDateTime(incident.started_at)}

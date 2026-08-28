@@ -303,10 +303,45 @@ def test_a_degrading_device_that_drops_gets_one_incident(small_network: Network)
     net.evaluate()
     assert len(net.open_incidents()) == 1
 
+    degraded = _only(net.open_incidents(), "device_degraded")
+
+    # It then drops entirely. "It is unavailable" is the better explanation, so
+    # the degradation incident is superseded rather than left open alongside it.
     net.availability("Czujnik kuchnia", "offline")
     net.advance(400)
-    net.evaluate()
+    result = net.evaluate()
 
-    kinds = sorted(i.kind for i in net.open_incidents())
-    assert kinds == ["device_degraded", "device_offline"]
-    assert all(i.cause_device_id == net.device_id("0xS2") for i in net.open_incidents())
+    assert [i.id for i in result.superseded] == [degraded.id]
+    offline = _only(net.open_incidents(), "device_offline")
+    assert len(net.open_incidents()) == 1
+    assert net.service.repo.get_incident(degraded.id).superseded_by == offline.id
+    assert any(
+        e.kind == "superseded" for e in net.service.repo.evidence_for(degraded.id)
+    ), "a superseded incident must say what replaced it"
+
+
+def test_a_router_incident_absorbs_the_single_device_one_detected_first(small_network: Network):
+    """Real detection is staggered: the router is confirmed offline before its
+    children are, so a single-device incident opens first. The router failure
+    must absorb it, not sit next to it."""
+
+    net = small_network
+    net.availability("IKEA salon", "offline")
+    net.advance(200)  # past the grace window for the router only
+    first = net.evaluate()
+
+    assert [i.kind for i in first.created] == ["device_offline"]
+    early = first.created[0]
+
+    # Its children are confirmed offline a couple of minutes later.
+    net.availability("Czujnik salon", "offline")
+    net.availability("Czujnik kuchnia", "offline")
+    net.availability("Czujnik sypialnia", "offline")
+    net.advance(200)
+    result = net.evaluate()
+
+    incidents = net.open_incidents()
+    assert len(incidents) == 1, "one router failure is one incident"
+    router = _only(incidents, "router_failure")
+    assert [i.id for i in result.superseded] == [early.id]
+    assert net.service.repo.get_incident(early.id).superseded_by == router.id

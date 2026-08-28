@@ -18,7 +18,7 @@ from ..models import (
     Incident,
 )
 from ..storage import Repository
-from .rules import ALL_RULES, EvaluationContext, Rule, build_bridge_state
+from .rules import ALL_RULES, RULE_RANK, EvaluationContext, Rule, build_bridge_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +37,11 @@ class EvaluationResult:
     created: list[Incident] = field(default_factory=list)
     updated: list[Incident] = field(default_factory=list)
     resolved: list[Incident] = field(default_factory=list)
+    superseded: list[Incident] = field(default_factory=list)
 
     @property
     def changed(self) -> bool:
-        return bool(self.created or self.updated or self.resolved)
+        return bool(self.created or self.updated or self.resolved or self.superseded)
 
 
 class CorrelationEngine:
@@ -106,6 +107,7 @@ class CorrelationEngine:
                 _LOGGER.exception("Correlation rule %s failed", getattr(rule, "__name__", rule))
 
         seen_keys: set[str] = set()
+        applied: list[tuple[Hypothesis, int]] = []
         for hypothesis in hypotheses:
             if hypothesis.correlation_key in seen_keys:
                 continue
@@ -113,6 +115,7 @@ class CorrelationEngine:
             existing = self._repo.open_incident_by_key(hypothesis.correlation_key)
             if existing is None:
                 incident = self._repo.create_incident(hypothesis, now)
+                applied.append((hypothesis, incident.id))
                 result.created.append(incident)
                 _LOGGER.info(
                     "Incident #%s opened: %s (confidence %.0f%%)",
@@ -122,12 +125,64 @@ class CorrelationEngine:
                 )
             else:
                 self._repo.update_incident(existing.id, hypothesis, now)
+                applied.append((hypothesis, existing.id))
                 refreshed = self._repo.get_incident(existing.id)
                 if refreshed is not None:
                     result.updated.append(refreshed)
 
+        result.superseded = self._supersede_weaker(applied, now)
+        superseded_ids = {incident.id for incident in result.superseded}
+        result.created = [i for i in result.created if i.id not in superseded_ids]
+        result.updated = [i for i in result.updated if i.id not in superseded_ids]
         result.resolved = self._resolve_recovered(ctx, seen_keys)
         return result
+
+    def _supersede_weaker(
+        self, applied: list[tuple[Hypothesis, int]], now: float
+    ) -> list[Incident]:
+        """Close open incidents that a better explanation now fully covers."""
+
+        if not applied:
+            return []
+        superseded: list[Incident] = []
+        for incident in self._repo.list_incidents(status="open", limit=200):
+            rank = RULE_RANK.get(incident.kind, 99)
+            devices = set(self._repo.incident_device_ids(incident.id))
+            if not devices:
+                continue
+            for hypothesis, incident_id in applied:
+                if incident_id == incident.id:
+                    continue
+                if RULE_RANK.get(hypothesis.kind, 99) >= rank:
+                    continue
+                covered = set(hypothesis.affected_device_ids)
+                if hypothesis.cause_device_id:
+                    covered.add(hypothesis.cause_device_id)
+                if not devices <= covered:
+                    continue
+                self._repo.add_evidence(
+                    incident.id,
+                    EvidenceItem(
+                        ts=now,
+                        kind="superseded",
+                        description=(
+                            f"Superseded by incident #{incident_id}: {hypothesis.title}"
+                        ),
+                        payload={"superseded_by": incident_id},
+                    ),
+                )
+                self._repo.supersede_incident(incident.id, incident_id, now)
+                refreshed = self._repo.get_incident(incident.id)
+                if refreshed is not None:
+                    superseded.append(refreshed)
+                _LOGGER.info(
+                    "Incident #%s superseded by #%s (%s)",
+                    incident.id,
+                    incident_id,
+                    hypothesis.kind,
+                )
+                break
+        return superseded
 
     # -- recovery ------------------------------------------------------------
     def _resolve_recovered(

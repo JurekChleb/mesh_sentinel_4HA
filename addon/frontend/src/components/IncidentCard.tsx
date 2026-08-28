@@ -19,8 +19,12 @@ export function IncidentCard({ incident, onOpen, chain }: Props) {
     >
       <div className="meta">
         <Pill tone={incident.severity}>{SEVERITY_LABEL[incident.severity] ?? incident.severity}</Pill>
-        <Pill tone={incident.status === 'open' ? 'warning' : 'healthy'}>
-          {incident.status === 'open' ? 'Active' : 'Resolved'}
+        <Pill tone={incident.status === 'open' ? 'warning' : incident.superseded_by ? 'unknown' : 'healthy'}>
+          {incident.status === 'open'
+            ? 'Active'
+            : incident.superseded_by
+              ? `Superseded by #${incident.superseded_by}`
+              : 'Resolved'}
         </Pill>
         <span className="muted small">
           {formatTime(incident.started_at)} · {Math.round(incident.confidence * 100)}% confidence ·{' '}

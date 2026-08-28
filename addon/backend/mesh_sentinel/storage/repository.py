@@ -74,6 +74,7 @@ def _incident_from_row(row: sqlite3.Row) -> Incident:
         resolved_at=row["resolved_at"],
         cause_device_id=row["cause_device_id"],
         network_id=row["network_id"],
+        superseded_by=row["superseded_by"],
         unknowns=_loads(row["unknowns_json"], []),
     )
 
@@ -456,6 +457,15 @@ class Repository:
             "UPDATE incidents SET status = 'resolved', resolved_at = ?, updated_at = ?"
             " WHERE id = ? AND status = 'open'",
             (now, now, incident_id),
+        )
+
+    def supersede_incident(self, incident_id: int, superseded_by: int, now: float) -> None:
+        """Close an incident because a better explanation now covers its devices."""
+
+        self._execute(
+            "UPDATE incidents SET status = 'resolved', resolved_at = ?, updated_at = ?,"
+            " superseded_by = ? WHERE id = ? AND status = 'open'",
+            (now, now, superseded_by, incident_id),
         )
 
     def get_incident(self, incident_id: int) -> Incident | None:
