@@ -89,6 +89,11 @@ A rule that cannot state its unknowns is not ready to ship. Each incident stores
 * **A restart is a warning, not an outage.** Scenario 3 must not read as a
   catastrophe, because it is not one — the incident exists so the timeline
   explains the gap, and it resolves itself when devices come back.
+* **A recovered restart stops explaining things.** Once every device is back,
+  that restart episode is closed and cannot claim devices that drop later, even
+  inside the 10 minute window. Otherwise a real outage minutes after a restart
+  gets filed as a warning that needs no action — a false negative, which is
+  worse than a false alarm.
 * **Retained MQTT messages are not proof of life.** Zigbee2MQTT replays each
   device's last state when we connect. Treating that as a fresh report would make
   a device that died two days ago look healthy for another 90 minutes, so a

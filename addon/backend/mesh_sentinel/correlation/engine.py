@@ -80,6 +80,7 @@ class CorrelationEngine:
         open_keys = {
             incident.correlation_key for incident in self._repo.list_incidents(status="open", limit=200)
         }
+        settled_keys = self._repo.settled_correlation_keys(now - LOOKBACK_SECONDS)
 
         return EvaluationContext(
             now=now,
@@ -91,6 +92,7 @@ class CorrelationEngine:
             offline_device_ids=offline_ids,
             offline_since=offline_since,
             open_incident_keys=open_keys,
+            settled_incident_keys=settled_keys,
         )
 
     # -- main entry point ----------------------------------------------------

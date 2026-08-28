@@ -14,6 +14,13 @@ startup: application
 boot: auto
 ingress: true
 ingress_port: 8099
+# Declared but closed. Set a port here in the app's Network settings only if you
+# want to reach the API directly - for the fault-injection tests in
+# docs/testing.md, or to script against it. Ingress needs none of this.
+ports:
+  8099/tcp: null
+ports_description:
+  8099/tcp: Mesh Sentinel API (optional, for testing; leave empty to use Ingress only)
 panel_icon: mdi:lan-check
 panel_title: Mesh Sentinel
 panel_admin: true

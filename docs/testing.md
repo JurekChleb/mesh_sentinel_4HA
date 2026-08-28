@@ -7,6 +7,55 @@ tests on a live Home Assistant install.
 Run them one at a time, and write down all four columns. The number that matters
 is not "did it detect something" — it is **false alarms** and **missing data**.
 
+## Two ways to test
+
+**Fault injection** (`scripts/simulate.py`) publishes the exact Zigbee2MQTT
+messages a real failure produces. It covers every rule in minutes, including the
+failures that are awkward to stage for real - losing the coordinator, or a whole
+branch of the mesh at once - and it can check the results itself. Start here.
+
+**Physical tests** (the table further down) are the ground truth. Injection
+proves the rules fire on the right messages; only pulling a plug proves the
+messages we expect are the messages Zigbee2MQTT actually sends. Do both, in that
+order.
+
+### Fault injection
+
+The script publishes to a *separate* base topic, so it never touches your real
+network. Point the app at that topic for the duration of the test:
+
+1. App options: `z2m_base_topic: meshsentinel_test`, then restart the app.
+   While this is set, your real network is not being watched. That is the trade
+   for testing the real, installed app instead of a mock.
+2. Optional but worth it: in the app's **Network** settings, map port `8099` so
+   the script can verify results instead of you reading them off the screen.
+3. Run it:
+
+   ```bash
+   pip install paho-mqtt
+   python scripts/simulate.py --host <broker-ip> --api http://<ha-ip>:8099 all
+   ```
+
+   Add `--username` / `--password` if your broker needs them. One scenario at a
+   time works too: `... simulate.py --host <broker-ip> router`.
+4. Put `z2m_base_topic` back to `zigbee2mqtt` and restart the app.
+
+Each scenario waits out the real grace and recovery windows, so a full run takes
+around fifteen minutes. To make it quick, lower `offline_grace_seconds` to `20`
+and `recovery_confirm_seconds` to `20` in the app options and pass
+`--grace 20 --recovery 20` so the script's waits match. Put the defaults back
+afterwards, and note in your results that the thresholds were changed - a
+detection tuned to an unrealistic window proves nothing about the default.
+
+With `--api` the script prints PASS/FAIL per scenario and checks more than the
+incident kind: severity, how many devices were grouped, which device was blamed,
+and that the conclusion, the recommended action and the unknowns are all
+populated. Without it, it prints what to look for in the UI.
+
+The scenarios map onto the catalogue in [incidents.md](incidents.md):
+`single`, `router`, `restart`, `coordinator`, `mass`, `degraded`, `blip`,
+`recover`. The one that matters most is `blip`: it must produce **nothing**.
+
 ## Before you start
 
 * Note the app version and the Zigbee2MQTT version.

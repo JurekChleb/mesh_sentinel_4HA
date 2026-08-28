@@ -345,3 +345,50 @@ def test_a_router_incident_absorbs_the_single_device_one_detected_first(small_ne
     router = _only(incidents, "router_failure")
     assert [i.id for i in result.superseded] == [early.id]
     assert net.service.repo.get_incident(early.id).superseded_by == router.id
+
+
+def test_a_recovered_restart_stops_explaining_later_failures(small_network: Network):
+    """A restart everyone came back from must not absorb the next outage.
+
+    Found by running the scenarios against a live broker: a Zigbee2MQTT restart
+    that had fully recovered still claimed devices that dropped minutes later,
+    filing a real outage as a warning that needs no action. Every step here stays
+    inside the 10 minute restart window, or the window alone would end the story
+    and the test would pass without proving anything.
+    """
+
+    net = small_network
+    sensors = ("Czujnik salon", "Czujnik kuchnia", "Czujnik sypialnia", "Czujnik lazienka")
+
+    net.bridge_state("offline")
+    net.advance(10)
+    for name in sensors:
+        net.availability(name, "offline")
+    net.advance(20)
+    net.bridge_state("online")  # restart recorded here
+    restart_at = net.clock.now()
+
+    net.advance(200)  # past the 180s grace
+    net.evaluate()
+    assert _only(net.open_incidents(), "service_restart")
+
+    for name in sensors:
+        net.availability(name, "online")
+    net.advance(130)  # past the 120s recovery confirmation
+    net.evaluate()
+    assert net.open_incidents() == [], "the restart episode is over"
+
+    # A new, unrelated outage - still inside the restart window.
+    for name in sensors:
+        net.availability(name, "offline")
+    net.advance(190)
+    net.report("IKEA salon", linkquality=90)
+    net.evaluate()
+
+    assert net.clock.now() - restart_at < net.service.settings.restart_window_seconds, (
+        "the second outage must fall inside the restart window for this test to mean anything"
+    )
+    incident = _only(net.open_incidents(), "mass_outage")
+    assert incident.severity == "error", (
+        "a real outage must not be downgraded to the restart's warning"
+    )

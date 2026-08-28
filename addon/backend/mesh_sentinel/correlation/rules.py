@@ -62,6 +62,7 @@ class EvaluationContext:
     offline_device_ids: list[str] = field(default_factory=list)
     offline_since: dict[str, float] = field(default_factory=dict)
     open_incident_keys: set[str] = field(default_factory=set)
+    settled_incident_keys: set[str] = field(default_factory=set)
 
     def device(self, device_id: str) -> Device | None:
         return self.devices.get(device_id)
@@ -206,6 +207,13 @@ def rule_service_restart(ctx: EvaluationContext, remaining: set[str]) -> list[Hy
     if ctx.now - restart.ts > window:
         return []
 
+    key = f"{ctx.network_id}:restart:{int(restart.ts)}"
+    if key in ctx.settled_incident_keys:
+        # Everything already came back from this restart. Whatever is failing
+        # now is a new event, and blaming the restart would file it as "no
+        # action needed" and hide a real outage.
+        return []
+
     # Only devices that dropped around the restart belong to it.
     claimed = {
         device_id
@@ -238,7 +246,7 @@ def rule_service_restart(ctx: EvaluationContext, remaining: set[str]) -> list[Hy
     return [
         Hypothesis(
             kind="service_restart",
-            correlation_key=f"{ctx.network_id}:restart:{int(restart.ts)}",
+            correlation_key=key,
             title="Devices dropped after a Zigbee2MQTT restart",
             conclusion=(
                 f"Zigbee2MQTT restarted and {len(claimed)} devices went unavailable "

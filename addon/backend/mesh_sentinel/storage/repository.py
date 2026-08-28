@@ -502,6 +502,17 @@ class Repository:
         )
         return [_incident_from_row(r) for r in rows]
 
+    def settled_correlation_keys(self, since: float) -> set[str]:
+        """Keys of incidents that already recovered, so an episode that is over
+        does not get to explain the next outage."""
+
+        rows = self._query(
+            "SELECT DISTINCT correlation_key FROM incidents"
+            " WHERE status = 'resolved' AND COALESCE(resolved_at, updated_at) >= ?",
+            (since,),
+        )
+        return {row["correlation_key"] for row in rows}
+
     def link_device(self, incident_id: int, device_id: str, role: str) -> None:
         self._execute(
             "INSERT INTO incident_devices(incident_id, device_id, role) VALUES(?, ?, ?)"

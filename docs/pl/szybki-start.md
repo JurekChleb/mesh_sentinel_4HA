@@ -49,6 +49,47 @@ przyznaje, że powiązanie wynika tylko z czasu.
 
 ## Testy u siebie
 
+### Najszybsza droga: wstrzykiwanie awarii
+
+`scripts/simulate.py` publikuje dokładnie takie komunikaty Zigbee2MQTT, jakie
+generuje prawdziwa awaria — w tym te trudne do wywołania fizycznie, jak utrata
+koordynatora czy zniknięcie całej gałęzi mesh naraz.
+
+Skrypt publikuje na **osobnym** temacie, więc nie dotyka Twojej prawdziwej
+sieci. Na czas testu przestaw aplikację na ten temat:
+
+1. Opcje aplikacji: `z2m_base_topic: meshsentinel_test`, restart aplikacji.
+   Przez ten czas prawdziwa sieć nie jest monitorowana — to cena za testowanie
+   realnie zainstalowanej aplikacji zamiast atrapy.
+2. Opcjonalnie, ale warto: w ustawieniach **Sieć** aplikacji wystaw port `8099`,
+   wtedy skrypt sam sprawdzi wyniki zamiast Ciebie.
+3. Uruchom:
+
+   ```bash
+   pip install paho-mqtt
+   python scripts/simulate.py --host <ip-brokera> --api http://<ip-ha>:8099 all
+   ```
+
+   Dodaj `--username` / `--password`, jeśli broker ich wymaga. Pojedynczy
+   scenariusz: `... simulate.py --host <ip-brokera> router`.
+4. Przywróć `z2m_base_topic: zigbee2mqtt` i zrestartuj aplikację.
+
+Pełny przebieg trwa około piętnastu minut, bo skrypt odczekuje prawdziwe okna
+tolerancji. Żeby skrócić: ustaw `offline_grace_seconds` i
+`recovery_confirm_seconds` na `20` i przekaż `--grace 20 --recovery 20`. Potem
+przywróć wartości domyślne i **zanotuj w wynikach, że progi były zmienione** —
+detekcja dostrojona do nierealistycznego okna nic nie mówi o ustawieniach
+domyślnych.
+
+Scenariusze: `single`, `router`, `restart`, `coordinator`, `mass`, `degraded`,
+`blip`, `recover`. Najważniejszy jest `blip` — musi nie wyprodukować **nic**.
+
+### Testy fizyczne
+
+Wstrzykiwanie dowodzi, że reguły reagują na właściwe komunikaty. Dopiero
+wyciągnięcie wtyczki dowodzi, że to są te komunikaty, które Zigbee2MQTT
+faktycznie wysyła. Zrób jedno i drugie, w tej kolejności.
+
 Pełny plan (7 testów odwracalnych, z tabelą do wypełnienia) jest w
 [docs/testing.md](../testing.md). Skrót:
 
