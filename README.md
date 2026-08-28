@@ -34,10 +34,20 @@ storage.
 
 ## Install
 
-1. In Home Assistant: **Settings → Add-ons → Add-on store → ⋮ → Repositories**.
-2. Add `https://github.com/JurekChleb/mesh_sentinel_4HA`.
+Mesh Sentinel is a Home Assistant **add-on** — a container the Supervisor runs
+alongside Home Assistant. It is not a HACS integration, so it needs Home
+Assistant OS or Supervised; Container and Core installs have no add-on store.
+
+1. In Home Assistant: **Settings → Add-ons → Add-on store → ⋮ → Repositories**
+   (this is the Supervisor's own dialog, not HACS's "Custom repositories").
+2. Add `https://github.com/JurekChleb/mesh_sentinel_4HA`. The repository must be
+   public — the Supervisor clones it without credentials.
 3. Install **Mesh Sentinel**, then start it.
 4. Open it from the sidebar (it is served through Ingress — no port to expose).
+
+To try it without publishing the repository, copy the contents of `addon/` into
+`/addons/mesh_sentinel/` on the host (the Samba share add-on exposes that folder)
+and use **⋮ → Check for updates**; it appears under *Local add-ons*.
 
 If the Mosquitto add-on is installed, the broker address and credentials are
 taken from the Supervisor automatically. To use an external broker, fill in
