@@ -12,7 +12,7 @@ bashio::log.info "Starting Mesh Sentinel 0.1.0 (log level ${LOG_LEVEL})"
 if bashio::services.available "mqtt"; then
   bashio::log.info "An MQTT service is registered with the Supervisor; it will be used unless you set a broker in the options."
 else
-  bashio::log.warning "No MQTT service registered. Set mqtt_host in the add-on options, or install the Mosquitto add-on."
+  bashio::log.warning "No MQTT service registered. Set mqtt_host in the app options, or install the Mosquitto app."
 fi
 
 cd /app

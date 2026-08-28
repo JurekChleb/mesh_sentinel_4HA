@@ -1,8 +1,8 @@
 """Home Assistant Supervisor integration.
 
-The add-on declares ``services: mqtt:need``, so the Supervisor hands us the
+The app declares ``services: mqtt:need``, so the Supervisor hands us the
 broker's address and credentials. Asking for them beats making the user retype
-what Home Assistant already knows - and it keeps the password out of the add-on
+what Home Assistant already knows - and it keeps the password out of the app
 options entirely.
 """
 

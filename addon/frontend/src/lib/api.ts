@@ -1,7 +1,7 @@
 /**
  * API client.
  *
- * Home Assistant Ingress mounts the add-on under a generated path prefix, so
+ * Home Assistant Ingress mounts the app under a generated path prefix, so
  * every request is resolved relative to wherever this page happens to live.
  */
 

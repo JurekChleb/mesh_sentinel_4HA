@@ -6,7 +6,7 @@ interface SparklineProps {
   label?: string
 }
 
-/** Inline SVG so the add-on ships no charting dependency. */
+/** Inline SVG so the app ships no charting dependency. */
 export function Sparkline({ points, width = 320, height = 56, threshold, label }: SparklineProps) {
   if (points.length < 2) {
     return <p className="muted small">Not enough history yet{label ? ` for ${label}` : ''}.</p>

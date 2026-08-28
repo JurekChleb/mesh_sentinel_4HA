@@ -1,7 +1,7 @@
 """Configuration.
 
-Values come from the Home Assistant add-on options file (``/data/options.json``)
-when running as an add-on, and from environment variables otherwise. Secrets
+Values come from the Home Assistant app options file (``/data/options.json``)
+when running as an app, and from environment variables otherwise. Secrets
 (MQTT password, HA token) are never persisted to the database or logged.
 """
 
@@ -104,7 +104,7 @@ def load_settings(
     options_path: str | os.PathLike[str] = DEFAULT_OPTIONS_PATH,
     environ: dict[str, str] | None = None,
 ) -> Settings:
-    """Build settings from the add-on options file, overlaid with env vars."""
+    """Build settings from the app options file, overlaid with env vars."""
 
     environ = dict(os.environ if environ is None else environ)
     settings = Settings()
@@ -115,7 +115,7 @@ def load_settings(
         try:
             options = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as err:  # pragma: no cover - defensive
-            _LOGGER.warning("Could not read add-on options at %s: %s", path, err)
+            _LOGGER.warning("Could not read app options at %s: %s", path, err)
 
     known = {f for f in vars(settings)} - {"extra"}
     for key, value in options.items():
@@ -129,7 +129,7 @@ def load_settings(
         if env_key in environ:
             setattr(settings, key, _coerce(environ[env_key], getattr(settings, key)))
 
-    # The Supervisor injects a scoped token for the add-on; prefer it over a
+    # The Supervisor injects a scoped token for the app; prefer it over a
     # long-lived token pasted into the options.
     if not settings.ha_token:
         settings.ha_token = environ.get("SUPERVISOR_TOKEN") or environ.get("HASSIO_TOKEN")

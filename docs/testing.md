@@ -9,7 +9,7 @@ is not "did it detect something" — it is **false alarms** and **missing data**
 
 ## Before you start
 
-* Note the add-on version and the Zigbee2MQTT version.
+* Note the app version and the Zigbee2MQTT version.
 * Confirm Zigbee2MQTT has `availability` enabled — without it, offline detection
   falls back to silence budgets and is slower by design.
 * Press **Network map** once so routing parents are recorded. The router rule is
@@ -19,8 +19,8 @@ is not "did it detect something" — it is **false alarms** and **missing data**
 
 | # | Test | How to do it | Expected conclusion |
 | --- | --- | --- | --- |
-| 1 | Restart Zigbee2MQTT | Restart the Z2M add-on | One `service_restart` incident, **warning** severity, resolving itself when devices return |
-| 2 | Restart Mesh Sentinel | Restart this add-on | No new incident. History and open incidents survive |
+| 1 | Restart Zigbee2MQTT | Restart the Z2M app | One `service_restart` incident, **warning** severity, resolving itself when devices return |
+| 2 | Restart Mesh Sentinel | Restart this app | No new incident. History and open incidents survive |
 | 3 | Unplug one Zigbee router | Pull power from a mains router with devices behind it | One `router_failure` incident naming that router, with the affected devices listed |
 | 4 | Remove one battery sensor's battery | Take the battery out | After the silence budget (24h by default), one `device_offline` incident for that device only |
 | 5 | Detach the USB coordinator | Detach it from the VM after a host restart | One `coordinator_unavailable` incident pointing at the host/USB — **not** a Zigbee failure, and **not** one incident per device |
@@ -50,7 +50,7 @@ is not "did it detect something" — it is **false alarms** and **missing data**
 ## Speeding up test 4
 
 Waiting 24 hours is not practical for a first pass. Lower `battery_stale_hours`
-to `1` in the add-on options, run the test, then set it back. Note in your
+to `1` in the app options, run the test, then set it back. Note in your
 results that the threshold was changed — a detection tuned to an unrealistic
 budget proves nothing about the default.
 

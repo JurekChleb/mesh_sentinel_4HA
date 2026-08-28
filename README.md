@@ -29,16 +29,18 @@ It **does not**: reset anything, re-pair anything, change a Zigbee channel, or
 make any other change to your network. v0.1.0 diagnoses and warns. Nothing else.
 
 Your data never leaves Home Assistant. There is no telemetry, no account, and no
-cloud dependency. The Home Assistant token stays in the add-on's own secret
+cloud dependency. The Home Assistant token stays in the app's own secret
 storage.
 
 ## Install
 
-Mesh Sentinel is a Home Assistant **add-on** — a container the Supervisor runs
-alongside Home Assistant. It is not a HACS integration, so it needs Home
-Assistant OS or Supervised; Container and Core installs have no add-on store.
+Mesh Sentinel is a Home Assistant **app** — a container the Supervisor runs
+alongside Home Assistant. (Home Assistant 2026.2 renamed add-ons to apps; it is
+the same thing, and the manifest files still use the old `addon` names.) It is
+not a HACS integration, so it needs Home Assistant OS or Supervised; Container
+and Core installs have no app store.
 
-1. In Home Assistant: **Settings → Add-ons → Add-on store → ⋮ → Repositories**
+1. In Home Assistant: **Settings → Apps → ⋮ → Repositories**
    (this is the Supervisor's own dialog, not HACS's "Custom repositories").
 2. Add `https://github.com/JurekChleb/mesh_sentinel_4HA`. The repository must be
    public — the Supervisor clones it without credentials.
@@ -46,12 +48,12 @@ Assistant OS or Supervised; Container and Core installs have no add-on store.
 4. Open it from the sidebar (it is served through Ingress — no port to expose).
 
 To try it without publishing the repository, copy the contents of `addon/` into
-`/addons/mesh_sentinel/` on the host (the Samba share add-on exposes that folder)
-and use **⋮ → Check for updates**; it appears under *Local add-ons*.
+`/addons/mesh_sentinel/` on the host (the Samba share app exposes that folder)
+and use **⋮ → Check for updates**; it appears under *Local apps*.
 
-If the Mosquitto add-on is installed, the broker address and credentials are
+If the Mosquitto app is installed, the broker address and credentials are
 taken from the Supervisor automatically. To use an external broker, fill in
-`mqtt_host` in the add-on options; an explicit value always wins over discovery.
+`mqtt_host` in the app options; an explicit value always wins over discovery.
 
 ### Options
 
@@ -121,15 +123,15 @@ cd addon/frontend && npm ci && npm run dev
 python -m pytest
 ```
 
-Configuration comes from `/data/options.json` when running as an add-on, and
+Configuration comes from `/data/options.json` when running as an app, and
 from `MESH_SENTINEL_*` environment variables otherwise
 (`MESH_SENTINEL_DB_PATH`, `MESH_SENTINEL_MQTT_HOST`, …).
 
 ## Repository layout
 
 ```
-addon/                 add-on build context (the Supervisor builds from here)
-  config.yaml          add-on manifest, options and schema
+addon/                 app build context (the Supervisor builds from here)
+  config.yaml          app manifest, options and schema
   Dockerfile           two stages: build the frontend, then the runtime image
   backend/             Python: collectors, detectors, correlation, storage, API
   frontend/            React + TypeScript UI served through Ingress
@@ -138,7 +140,7 @@ tests/                 the incident scenarios, collector parsing, API contract
 ```
 
 `backend/` and `frontend/` live inside `addon/` because the Supervisor builds an
-add-on with its own directory as the Docker build context.
+app with its own directory as the Docker build context.
 
 ## Documentation
 

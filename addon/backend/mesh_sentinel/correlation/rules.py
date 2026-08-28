@@ -103,7 +103,7 @@ def rule_data_source(ctx: EvaluationContext, remaining: set[str]) -> list[Hypoth
             "below are the last known ones, not live. This says nothing about the "
             "Zigbee network itself."
         )
-        action = "Check that the MQTT broker add-on is running, then check the credentials in Mesh Sentinel options."
+        action = "Check that the MQTT broker app is running, then check the credentials in Mesh Sentinel options."
         unknowns = [
             "Whether the Zigbee devices are actually reachable - we cannot observe them without MQTT.",
             "Whether Zigbee2MQTT is still running.",
@@ -139,7 +139,7 @@ def rule_data_source(ctx: EvaluationContext, remaining: set[str]) -> list[Hypoth
             "The Zigbee2MQTT bridge reports itself offline. Every device behind it is "
             "unreachable for as long as that lasts - this is one failure, not many."
         )
-        action = "Check the Zigbee2MQTT add-on log and restart it if it has stopped."
+        action = "Check the Zigbee2MQTT app log and restart it if it has stopped."
         unknowns = [
             "Whether the bridge stopped on its own or was stopped.",
             "The state of individual devices while the bridge is down.",
@@ -254,7 +254,7 @@ def rule_service_restart(ctx: EvaluationContext, remaining: set[str]) -> list[Hy
             started_at=restart.ts,
             evidence=evidence,
             unknowns=[
-                "Why Zigbee2MQTT restarted - the add-on log holds that, we only see the event.",
+                "Why Zigbee2MQTT restarted - the app log holds that, we only see the event.",
                 "Whether every device will re-report; battery devices report on their own schedule.",
             ],
             affected_device_ids=sorted(claimed),

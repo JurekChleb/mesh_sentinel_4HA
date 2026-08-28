@@ -8,7 +8,7 @@ COPY frontend/ ./
 RUN npm run build
 
 
-# --- stage 2: the add-on image -----------------------------------------------
+# --- stage 2: the app image -----------------------------------------------
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.20
 FROM ${BUILD_FROM}
 

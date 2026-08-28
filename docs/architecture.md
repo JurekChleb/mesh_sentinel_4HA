@@ -88,10 +88,10 @@ leaking upward would silently break correlation.
 
 ## Home Assistant integration
 
-The add-on runs behind Ingress, so nothing is exposed on the network. The
+The app runs behind Ingress, so nothing is exposed on the network. The
 frontend resolves `./api` relative to wherever Ingress mounted it; no path is
 hardcoded. MQTT credentials come from the Supervisor's `mqtt:need` service, so
-the broker password need not be typed into the add-on options at all.
+the broker password need not be typed into the app options at all.
 
 The Home Assistant WebSocket connection is deliberately small in 0.1.0: it
 records HA restarts, so a timeline can say "everything went quiet because Home

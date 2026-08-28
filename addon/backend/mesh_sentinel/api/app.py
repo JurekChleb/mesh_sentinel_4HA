@@ -1,6 +1,6 @@
 """FastAPI application: JSON API plus the static frontend behind HA Ingress.
 
-Ingress serves the add-on under a generated path prefix, so every route here is
+Ingress serves the app under a generated path prefix, so every route here is
 relative and the frontend resolves ``./api`` against its own location. Nothing
 assumes it is mounted at the root.
 """
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 def _find_frontend() -> Path | None:
     """Locate the built frontend.
 
-    Three layouts have to work: the add-on image (/app/frontend), a source
+    Three layouts have to work: the app image (/app/frontend), a source
     checkout (repo/frontend/dist), and an explicit override for development.
     """
 

@@ -50,20 +50,20 @@ edition checks through the detection layer.
 ## Release order
 
 1. Private repository, tested on one real install.
-2. Public Free beta through a custom Home Assistant add-on repository.
+2. Public Free beta through a custom Home Assistant app repository.
 3. Install documentation, screenshots, published test scenarios.
-4. Announce it where add-on users actually look: the Home Assistant community
+4. Announce it where app users actually look: the Home Assistant community
    forum and r/homeassistant.
-5. Pro distributed through its own add-on repository with licensing.
+5. Pro distributed through its own app repository with licensing.
 
 **Not HACS.** The original plan had a "submit to HACS" step, which does not apply
 here: HACS distributes custom integrations, dashboard plugins and themes — code
-that runs *inside* Home Assistant. Mesh Sentinel is an add-on, a container that
-runs *alongside* it, and add-ons are distributed only through add-on
-repositories added in the Supervisor's own store. There is no HACS listing to
+that runs *inside* Home Assistant. Mesh Sentinel is an app, a container that
+runs *alongside* it, and apps are distributed only through app repositories
+added in the Supervisor's own store. There is no HACS listing to
 apply for.
 
-Users add the repository under **Settings → Add-ons → Add-on store → ⋮ →
+Users add the repository under **Settings → Apps → App store → ⋮ →
 Repositories**, which is a different dialog from HACS's "Custom repositories".
-This also means the add-on requires Home Assistant OS or Supervised; it cannot
+This also means the app requires Home Assistant OS or Supervised; it cannot
 run on Home Assistant Container or Core installs.

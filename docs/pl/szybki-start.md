@@ -10,13 +10,13 @@ uruchomienia i przetestowania u siebie.
 
 ## Instalacja
 
-1. **Ustawienia → Dodatki → Sklep z dodatkami → ⋮ → Repozytoria**.
+1. **Ustawienia → Aplikacje → ⋮ → Repozytoria**.
 2. Dodaj `https://github.com/JurekChleb/mesh_sentinel_4HA`.
 3. Zainstaluj **Mesh Sentinel** i uruchom.
 4. Otwórz z paska bocznego (działa przez Ingress — nie trzeba wystawiać portu).
 
-Jeśli masz dodatek Mosquitto, adres brokera i hasło zostaną pobrane z
-Supervisora automatycznie. Własny broker: wpisz `mqtt_host` w opcjach dodatku —
+Jeśli masz aplikację Mosquitto, adres brokera i hasło zostaną pobrane z
+Supervisora automatycznie. Własny broker: wpisz `mqtt_host` w opcjach aplikacji —
 wartość wpisana ręcznie zawsze ma pierwszeństwo.
 
 Sprawdź, czy `z2m_base_topic` zgadza się z `mqtt.base_topic` w Zigbee2MQTT
@@ -53,7 +53,7 @@ Pełny plan (7 testów odwracalnych, z tabelą do wypełnienia) jest w
 [docs/testing.md](../testing.md). Skrót:
 
 1. restart Z2M → jeden incydent `service_restart`, poziom **warning**;
-2. restart dodatku → brak nowego incydentu, historia zachowana;
+2. restart aplikacji → brak nowego incydentu, historia zachowana;
 3. odłączenie routera Zigbee → jeden `router_failure` ze wskazaniem routera;
 4. wyjęcie baterii z czujnika → jeden `device_offline` tylko dla niego;
 5. brak koordynatora USB po restarcie VMware → jeden `coordinator_unavailable`
